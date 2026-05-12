@@ -5,7 +5,19 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from django.utils import timezone
 from datetime import datetime
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token['role'] = 'admin' if user.is_staff else 'teacher'
+        token['username'] = user.username
+        return token
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
 from .models import (
     Balance, District, Teacher, Group, DistrictStudent, Student, Payment,
     Expense, Homework, News, Attendance, CustomSchedule
