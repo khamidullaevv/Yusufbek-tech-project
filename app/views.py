@@ -10,7 +10,7 @@ from .models import (
     Balance, District, Teacher, Group, DistrictStudent, Student, Payment,
     Expense, Homework, News, Attendance, CustomSchedule
 )
-from .serializers import (
+from .serializer import (
     BalanceSerializer, DistrictSerializer, TeacherSerializer, GroupSerializer,
     DistrictStudentSerializer, StudentSerializer, PaymentSerializer,
     ExpenseSerializer, HomeworkSerializer, NewsSerializer,
@@ -101,3 +101,83 @@ class StudentViewSet(viewsets.ModelViewSet):
             )
         elif not student.paid and old_paid:
             balance.amount -= student.amount
+        student.save()
+        balance.save()
+        return Response({'student': StudentSerializer(student).data, 'balance': balance.amount})
+
+
+class PaymentViewSet(viewsets.ModelViewSet):
+    queryset = Payment.objects.select_related('student', 'group').order_by('-date')
+    serializer_class = PaymentSerializer
+    permission_classes = [AllowAny]
+    filter_fields = ['student', 'group']
+    search_fields = ['student_name']
+    ordering_fields = ['date', 'amount']
+
+
+class ExpenseViewSet(viewsets.ModelViewSet):
+    queryset = Expense.objects.all()
+    serializer_class = ExpenseSerializer
+    permission_classes = [AllowAny]
+    search_fields = ['name']
+    filter_fields = ['paid', 'color']
+
+    @action(detail=True, methods=['post'])
+    def toggle_paid(self, request, pk=None):
+        expense = self.get_object()
+        old_paid = expense.paid
+        expense.paid = not expense.paid
+
+        balance = Balance.objects.first() or Balance.objects.create()
+        if not expense.paid and old_paid:
+            balance.amount += expense.amount
+        elif expense.paid and not old_paid:
+            if balance.amount >= expense.amount:
+                balance.amount -= expense.amount
+            else:
+                return Response({'error': 'Insufficient balance'}, status=status.HTTP_400_BAD_REQUEST)
+
+        expense.save()
+        balance.save()
+        return Response({'expense': ExpenseSerializer(expense).data, 'balance': balance.amount})
+
+
+class HomeworkViewSet(viewsets.ModelViewSet):
+    queryset = Homework.objects.select_related('group')
+    serializer_class = HomeworkSerializer
+    permission_classes = [AllowAny]
+    filter_fields = ['group']
+    search_fields = ['title']
+    ordering_fields = ['deadline']
+
+
+class NewsViewSet(viewsets.ModelViewSet):
+    queryset = News.objects.all()
+    serializer_class = NewsSerializer
+    permission_classes = [AllowAny]
+    filter_fields = ['tag']
+    search_fields = ['text']
+    ordering_fields = ['date', 'likes']
+
+    @action(detail=True, methods=['post'])
+    def like(self, request, pk=None):
+        news = self.get_object()
+        news.likes += 1
+        news.save()
+        return Response({'likes': news.likes})
+
+
+class AttendanceViewSet(viewsets.ModelViewSet):
+    queryset = Attendance.objects.select_related('student', 'group')
+    serializer_class = AttendanceSerializer
+    permission_classes = [AllowAny]
+    filter_fields = ['group', 'student', 'status', 'month']
+    search_fields = ['student__name']
+    ordering_fields = ['date']
+
+
+class CustomScheduleViewSet(viewsets.ModelViewSet):
+    queryset = CustomSchedule.objects.all()
+    serializer_class = CustomScheduleSerializer
+    permission_classes = [AllowAny]
+    ordering_fields = ['day', 'time']
