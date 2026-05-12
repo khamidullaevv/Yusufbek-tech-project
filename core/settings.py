@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'app',
     'jazzmin',
+    'core',
     'rest_framework',
 ]
 

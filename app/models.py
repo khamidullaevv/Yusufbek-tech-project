@@ -1,5 +1,10 @@
 from django.db import models
 from django.core.validators import MinValueValidator
+from django.contrib.auth.models import AbstractUser
+class User(AbstractUser):
+    """Кастомная модель пользователя для системы"""
+    # Вы можете добавить свои поля позже, если нужно
+    pass
 
 class Balance(models.Model):
     """Касса - главный учет финансов"""
