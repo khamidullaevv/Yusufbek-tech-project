@@ -1,5 +1,7 @@
 from django.contrib import admin
 from django.urls import path
+from rest_framework_simplejwt.views import TokenRefreshView
+from app.views import CustomTokenObtainPairView
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from app.views import (
@@ -22,11 +24,9 @@ router.register(r'attendances', AttendanceViewSet)
 router.register(r'custom-schedules', CustomScheduleViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
-]
-
-
-urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
+    path('api/auth/token/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('', include(router.urls)),
+    path('api/auth/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
