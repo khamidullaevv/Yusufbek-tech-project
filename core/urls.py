@@ -1,22 +1,32 @@
-"""
-URL configuration for core project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/6.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
 from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from app.views import (
+    BalanceViewSet, DistrictViewSet, TeacherViewSet, GroupViewSet,
+    DistrictStudentViewSet, StudentViewSet, PaymentViewSet, ExpenseViewSet,
+    HomeworkViewSet, NewsViewSet, AttendanceViewSet, CustomScheduleViewSet
+)
+router = DefaultRouter()
+router.register(r'balances', BalanceViewSet)
+router.register(r'districts', DistrictViewSet)
+router.register(r'teachers', TeacherViewSet)
+router.register(r'groups', GroupViewSet)
+router.register(r'district-students', DistrictStudentViewSet)
+router.register(r'students', StudentViewSet)
+router.register(r'payments', PaymentViewSet)
+router.register(r'expenses', ExpenseViewSet)
+router.register(r'homeworks', HomeworkViewSet)
+router.register(r'news', NewsViewSet)
+router.register(r'attendances', AttendanceViewSet)
+router.register(r'custom-schedules', CustomScheduleViewSet)
+
+urlpatterns = [
+    path('', include(router.urls)),
+]
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/', include('api.urls')),
 ]

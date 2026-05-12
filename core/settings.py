@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'jazzmin',
     'core',
     'rest_framework',
+    'corsheaders',
+    
 ]
 
 MIDDLEWARE = [
