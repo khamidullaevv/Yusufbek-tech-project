@@ -1,234 +1,146 @@
 from django.db import models
 from django.core.validators import MinValueValidator
 from django.contrib.auth.models import AbstractUser
+from django.utils.translation import gettext_lazy as _
+
 class User(AbstractUser):
-    """Кастомная модель пользователя для системы"""
-    # Вы можете добавить свои поля позже, если нужно
-    pass
+    class Meta:
+        verbose_name = _("User")
+        verbose_name_plural = _("Users")
 
 class Balance(models.Model):
-    """Касса - главный учет финансов"""
-    amount = models.BigIntegerField(default=15750000, help_text="Сумма в сум")
-    last_updated = models.DateTimeField(auto_now=True)
+    amount = models.BigIntegerField(default=0, verbose_name=_("Amount"))
+    last_updated = models.DateTimeField(auto_now=True, verbose_name=_("Last Updated"))
 
     class Meta:
-        verbose_name = "Касса"
-        verbose_name_plural = "Касса"
+        verbose_name = _("Balance")
+        verbose_name_plural = _("Balance")
 
     def __str__(self):
-        return f"Баланс: {self.amount}"
-
+        return f"Balance: {self.amount}"
 
 class District(models.Model):
-    """Районы города"""
-    name = models.CharField(max_length=255)  # "Chilonzor tumani"
-    city = models.CharField(max_length=255, default="Toshkent")
-    created_at = models.DateTimeField(auto_now_add=True)
+    name = models.CharField(max_length=255, verbose_name=_("District Name"))
+    city = models.CharField(max_length=255, default="Toshkent", verbose_name=_("City"))
 
     class Meta:
-        verbose_name = "Район"
-        verbose_name_plural = "Районы"
-        ordering = ['name']
+        verbose_name = _("District")
+        verbose_name_plural = _("Districts")
 
-    def str(self):
-        return f"{self.name}, {self.city}"
-
-
-class Teacher(models.Model):
-    """Преподаватели"""
-    STATUS_CHOICES = [('active', 'Активный'), ('inactive', 'Неактивный')]
-    
-    name = models.CharField(max_length=255)
-    phone = models.CharField(max_length=20)
-    subject = models.CharField(max_length=255)  # Предмет
-    salary = models.BigIntegerField(validators=[MinValueValidator(0)])
-    join_date = models.DateField()
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = "Преподаватель"
-        verbose_name_plural = "Преподаватели"
-        ordering = ['-created_at']
-
-    def str(self):
-        return f"{self.name} ({self.subject})"
-
-
-class Group(models.Model):
-    """Учебные группы"""
-    LEVEL_CHOICES = [('begin', 'Начальный'), ('mid', 'Средний'), ('advanced', 'Продвинутый')]
-    DAYS_CHOICES = [(0, 'Пн'), (1, 'Вт'), (2, 'Ср'), (3, 'Чт'), (4, 'Пт'), (5, 'Сб'), (6, 'Вс')]
-    
-    id_code = models.CharField(max_length=50, unique=True, primary_key=True)  # Frontend-1001
-    subject = models.CharField(max_length=255)
-    teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, null=True, blank=True)
-    room = models.CharField(max_length=50)
-    days = models.JSONField(default=list)  # [0, 2, 4] = Пн, Ср, Пт
-    time = models.TimeField()
-    level = models.CharField(max_length=10, choices=LEVEL_CHOICES, default='begin')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = "Группа"
-        verbose_name_plural = "Группы"
-        ordering = ['id_code']
-
-    def str(self):
-        return f"{self.id_code} — {self.subject}"
-
+    def __str__(self):
+        return self.name
 
 class DistrictStudent(models.Model):
-    """Студенты в районе (для статистики)"""
-    STATUS_CHOICES = [('active', 'Активный'), ('inactive', 'Неактивный')]
-    
     district = models.ForeignKey(District, on_delete=models.CASCADE, related_name='students')
-    name = models.CharField(max_length=255)
-    phone = models.CharField(max_length=20)
-    age = models.IntegerField(validators=[MinValueValidator(5)])
-    direction = models.CharField(max_length=100)  # Frontend, React, Node.js
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active')
-    created_at = models.DateTimeField(auto_now_add=True)
+    name = models.CharField(max_length=255, verbose_name=_("Full Name"))
+    phone = models.CharField(max_length=20, verbose_name=_("Phone"))
+    age = models.IntegerField(validators=[MinValueValidator(5)], verbose_name=_("Age"))
+    direction = models.CharField(max_length=100, verbose_name=_("Direction"))
+    status = models.CharField(max_length=20, default='active', verbose_name=_("Status"))
 
     class Meta:
-        verbose_name = "Студент района"
-        verbose_name_plural = "Студенты района"
+        verbose_name = _("District Student")
+        verbose_name_plural = _("District Students")
 
-    def str(self):
-        return f"{self.name} ({self.district.name})"
+class Teacher(models.Model):
+    STATUS_CHOICES = [('active', _('Active')), ('inactive', _('Inactive'))]
+    name = models.CharField(max_length=255, verbose_name=_("Full Name"))
+    phone = models.CharField(max_length=20, verbose_name=_("Phone"))
+    subject = models.CharField(max_length=255, verbose_name=_("Subject"))
+    salary = models.BigIntegerField(validators=[MinValueValidator(0)], verbose_name=_("Salary"))
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active', verbose_name=_("Status"))
 
+    class Meta:
+        verbose_name = _("Teacher")
+        verbose_name_plural = _("Teachers")
+
+    def __str__(self):
+        return self.name
+
+class Group(models.Model):
+    id_code = models.CharField(max_length=50, unique=True, primary_key=True, verbose_name=_("Group ID"))
+    subject = models.CharField(max_length=255, verbose_name=_("Subject"))
+    teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, null=True, verbose_name=_("Teacher"))
+    room = models.CharField(max_length=50, verbose_name=_("Room"))
+    time = models.TimeField(verbose_name=_("Time"))
+    level = models.CharField(max_length=50, verbose_name=_("Level"))
+
+    class Meta:
+        verbose_name = _("Group")
+        verbose_name_plural = _("Groups")
+
+    def __str__(self):
+        return self.id_code
 
 class Student(models.Model):
-    """Студенты"""
-    id_num = models.BigAutoField(primary_key=True)
-    name = models.CharField(max_length=255)
-    phone = models.CharField(max_length=20)
-    group = models.ForeignKey(Group, on_delete=models.SET_NULL, null=True, blank=True)
-    direction = models.CharField(max_length=100)  # Frontend, React, Node.js
-    paid = models.BooleanField(default=False)
-    amount = models.BigIntegerField(default=0, validators=[MinValueValidator(0)])
-    join_date = models.DateField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-class Meta:
-        verbose_name = "Студент"
-        verbose_name_plural = "Студенты"
-        ordering = ['-created_at']
+    name = models.CharField(max_length=255, verbose_name=_("Full Name"))
+    phone = models.CharField(max_length=20, verbose_name=_("Phone"))
+    group = models.ForeignKey(Group, on_delete=models.SET_NULL, null=True, verbose_name=_("Group"))
+    direction = models.CharField(max_length=100, verbose_name=_("Direction"))
+    paid = models.BooleanField(default=False, verbose_name=_("Is Paid"))
+    amount = models.BigIntegerField(default=0, verbose_name=_("Fee Amount"))
 
-def str(self):
-        return f"{self.name} ({self.group})"
-
+    class Meta:
+        verbose_name = _("Student")
+        verbose_name_plural = _("Students")
 
 class Payment(models.Model):
-    """Платежи от студентов"""
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='payments')
-    student_name = models.CharField(max_length=255)
-    group = models.ForeignKey(Group, on_delete=models.SET_NULL, null=True, blank=True)
-    amount = models.BigIntegerField(validators=[MinValueValidator(0)])
-    date = models.DateField(auto_now_add=True)
-    month = models.CharField(max_length=50)  # "Апрель", "April"
-    created_at = models.DateTimeField(auto_now_add=True)
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, verbose_name=_("Student"))
+    student_name = models.CharField(max_length=255, verbose_name=_("Student Name"))
+    group = models.ForeignKey(Group, on_delete=models.SET_NULL, null=True, verbose_name=_("Group"))
+    amount = models.BigIntegerField(verbose_name=_("Amount"))
+    date = models.DateField(auto_now_add=True, verbose_name=_("Date"))
+    month = models.CharField(max_length=50, verbose_name=_("Month"))
 
     class Meta:
-        verbose_name = "Платеж"
-        verbose_name_plural = "Платежи"
-        ordering = ['-date']
-
-    def str(self):
-        return f"{self.student_name} — {self.amount} (от {self.date})"
-
+        verbose_name = _("Payment")
+        verbose_name_plural = _("Payments")
 
 class Expense(models.Model):
-    """Расходы (электричество, вода, интернет, аренда)"""
-    COLOR_CHOICES = [('y', 'Желтый'), ('a', 'Синий'), ('g', 'Зеленый'), ('pu', 'Фиолетовый')]
-    
-    name = models.CharField(max_length=255)
-    icon = models.CharField(max_length=50)  # bolt, drop, wifi, rent
-    color = models.CharField(max_length=10, choices=COLOR_CHOICES)
-    amount = models.BigIntegerField(validators=[MinValueValidator(0)])
-    description = models.TextField()
-    paid = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    name = models.CharField(max_length=255, verbose_name=_("Name"))
+    amount = models.BigIntegerField(verbose_name=_("Amount"))
+    paid = models.BooleanField(default=False, verbose_name=_("Paid"))
+    color = models.CharField(max_length=20, verbose_name=_("Color"))
 
     class Meta:
-        verbose_name = "Расход"
-        verbose_name_plural = "Расходы"
-
-    def str(self):
-        return f"{self.name} ({self.amount})"
-
+        verbose_name = _("Expense")
+        verbose_name_plural = _("Expenses")
 
 class Homework(models.Model):
-    """Домашние задания"""
-    title = models.CharField(max_length=255)
-    group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name='homeworks')
-    description = models.TextField()
-    deadline = models.DateField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    title = models.CharField(max_length=255, verbose_name=_("Title"))
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, verbose_name=_("Group"))
+    deadline = models.DateField(verbose_name=_("Deadline"))
 
     class Meta:
-        verbose_name = "Домашнее задание"
-        verbose_name_plural = "Домашние задания"
-        ordering = ['deadline']
-
-    def str(self):
-        return f"{self.title} ({self.group})"
-
+        verbose_name = _("Homework")
+        verbose_name_plural = _("Homeworks")
 
 class News(models.Model):
-    """Новости центра"""
-    TAG_CHOICES = [
-        ('info', 'Информация'),
-        ('event', 'Мероприятие'),
-        ('alert', 'Важно'),
-        ('announce', 'Объявление')
-    ]
-    
-    text = models.TextField()
-    tag = models.CharField(max_length=20, choices=TAG_CHOICES)
-    author = models.CharField(max_length=255, default='Admin')
+    text = models.TextField(verbose_name=_("Content"))
+    tag = models.CharField(max_length=50, verbose_name=_("Tag"))
+    likes = models.IntegerField(default=0, verbose_name=_("Likes"))
     date = models.DateField(auto_now_add=True)
-    time = models.TimeField(auto_now_add=True)
-    likes = models.IntegerField(default=0, validators=[MinValueValidator(0)])
-    image_url = models.URLField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        verbose_name = "Новость"
-        verbose_name_plural = "Новости"
-        ordering = ['-date', '-time']
-
-    def str(self):
-        return f"{self.text[:50]}..."
-
+        verbose_name = _("News")
+        verbose_name_plural = _("News")
 
 class Attendance(models.Model):
-    """Данные по посещаемости"""
-    STATUS_CHOICES = [
-        ('present', 'Присутствовал'),
-        ('absent', 'Отсутствовал'),
-        ('late', 'Опоздал'),
-        ('dayoff', 'Выходной')
-    ]
-    
-    student = models.ForeignKey(Student, on_delete=models.CASCADE)
-    group = models.ForeignKey(Group, on_delete=models.CASCADE)
-    date = models.DateField()
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES)
-    month = models.IntegerField()  # 0-11
-    created_at = models.DateTimeField(auto_now_add=True)
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, verbose_name=_("Student"))
+    group = models.ForeignKey(Group, on_delete=models.CASCADE, verbose_name=_("Group"))
+    date = models.DateField(verbose_name=_("Date"))
+    status = models.CharField(max_length=20, verbose_name=_("Status"))
+    month = models.IntegerField(verbose_name=_("Month"))
 
     class Meta:
-        verbose_name = "Посещаемость"
-        verbose_name_plural = "Посещаемость"
-        ordering = ['-date']
-        unique_together = ['student', 'group', 'date']
+        verbose_name = _("Attendance")
+        verbose_name_plural = _("Attendance")
 
-    def str(self):
-        return f"{self.student} — {self.status} ({self.date})"
+class CustomSchedule(models.Model):
+    day = models.DateField(verbose_name=_("Day"))
+    time = models.TimeField(verbose_name=_("Time"))
+    description = models.CharField(max_length=255, verbose_name=_("Description"))
+
+    class Meta:
+        verbose_name = _("Custom Schedule")
+        verbose_name_plural = _("Custom Schedules")
